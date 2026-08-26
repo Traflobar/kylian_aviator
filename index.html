@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kylian Bamba - Prédicteur</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-blue: #00e5ff;
+            --dark-bg: #0a0e12;
+            --panel-bg: #121a1f;
+            --panel-border: #1a2a32;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--dark-bg);
+            color: #e2e8f0;
+            overflow-x: hidden;
+            /* Hacker grid background */
+            background-image: 
+                linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            background-position: center center;
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(18, 26, 31, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .neon-text-green {
+            color: var(--neon-green);
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        .neon-border-green {
+            border: 1px solid var(--neon-green);
+            box-shadow: inset 0 0 10px rgba(0, 255, 136, 0.1), 0 0 10px rgba(0, 255, 136, 0.2);
+        }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: var(--neon-green);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+            animation: pulse-dot 2s infinite;
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(0, 255, 136, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+        }
+
+        .btn-hacker {
+            background: linear-gradient(90deg, rgba(0,255,136,0.1) 0%, rgba(0,255,136,0.2) 100%);
+            border: 1px solid var(--neon-green);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-hacker:hover {
+            background: linear-gradient(90deg, rgba(0,255,136,0.2) 0%, rgba(0,255,136,0.4) 100%);
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #0a0a0a;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon-green), var(--neon-blue));
+            width: 0%;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px var(--neon-green);
+        }
+
+        /* VIP Screen Styles */
+        .vip-panel {
+            border: 1px solid #f97316; /* Orange */
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+        }
+        
+        .btn-orange {
+            background: linear-gradient(90deg, #ea580c, #f97316);
+            color: white;
+        }
+        
+        .btn-blue-outline {
+            border: 1px solid var(--neon-blue);
+            color: white;
+            background: rgba(0, 229, 255, 0.05);
+        }
+
+        /* View Management */
+        .view {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Prediction Text Styles */
+        .prediction-value {
+            font-size: 5rem;
+            font-weight: 900;
+            background: linear-gradient(to bottom, #ffffff, #a3b8cc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 0px 15px rgba(255,255,255,0.2);
+            font-family: 'Orbitron', sans-serif;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 min-h-screen">
+
+    <main class="w-full max-w-md w-full relative z-10 flex flex-col gap-4">
+        
+        <!-- Global Top Bar -->
+        <div class="glass-panel py-3 px-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="status-dot"></span>
+                <h1 class="font-orbitron font-bold text-sm tracking-wider neon-text-green uppercase">Kylian Bamba - Prédicteur</h1>
+            </div>
+            <div class="text-[10px] font-bold border border-[#00e5ff] text-[#00e5ff] px-2 py-1 rounded uppercase tracking-wider bg-[#00e5ff]/10">
+                Serveur Connecté
+            </div>
+        </div>
+
+        <!-- VIEW 1: GAME SELECTION -->
+        <div id="view-selection" class="view active glass-panel p-6">
+            <h2 class="font-orbitron text-xl font-bold text-center neon-text-green mb-2 uppercase">Sélectionner Le Jeu</h2>
+            <p class="text-center text-slate-400 text-sm mb-6">Choisissez l'algorithme à pirater :</p>
+            
+            <div class="flex flex-col gap-4">
+                <button onclick="startGame('aviator')" class="btn-hacker rounded-lg p-4 flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">✈️</span>
+                        <div class="text-left">
+                            <h3 class="font-orbitron font-bold text-white text-lg group-hover:text-[var(--neon-green)] transition-colors">AVIATOR</h3>
+                            <p class="text-xs text-slate-400">Détection de multiplicateur</p>
+                        </div>
+                    </div>
+                    <svg class="w-6 h-6 text-[var(--neon-green)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 3: PREDICTOR -->
+        <div id="view-predictor" class="view glass-panel p-6 relative overflow-hidden">
+            <!-- Game specific header injected here -->
+            <div id="predictor-game-header" class="text-center mb-6 border-b border-[#1a2a32] pb-4">
+                <span class="text-2xl mb-2 block" id="pg-icon">✈️</span>
+                <h2 class="font-orbitron text-lg font-bold text-white uppercase tracking-widest" id="pg-title">AVIATOR HACK</h2>
+            </div>
+
+            <!-- Main Prediction Display -->
+            <div class="bg-[#0a0e12] border border-[#1a2a32] rounded-xl py-10 mb-6 flex flex-col items-center justify-center min-h-[180px] relative shadow-inner">
+                
+                <!-- Scanner effect line -->
+                <div id="scanner-line" class="absolute top-0 left-0 w-full h-1 bg-[var(--neon-green)] opacity-50 hidden" style="box-shadow: 0 0 10px var(--neon-green);"></div>
+
+                <div id="prediction-display" class="prediction-value">
+                    --.--
+                </div>
+                <div id="prediction-label" class="text-slate-500 text-xs font-orbitron mt-2 uppercase tracking-widest">En attente d'injection</div>
+            </div>
+
+            <!-- Action Button -->
+            <button id="btn-predict" onclick="runPrediction()" class="w-full btn-hacker py-4 px-6 rounded-xl text-lg font-bold flex justify-center items-center gap-3 mb-6 uppercase tracking-wider font-orbitron">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span id="btn-predict-text">Lancer Le Hack</span>
+            </button>
+
+            <!-- Stats/Info Grid -->
+            <div class="grid grid-cols-2 gap-3 text-center">
+                <div class="bg-[#0a0e12] border border-[#1a2a32] rounded-lg p-3">
+                    <div class="text-[10px] text-slate-500 uppercase font-bold mb-1">Confiance</div>
+                    <div id="stat-confidence" class="font-orbitron font-bold text-white">--%</div>
+                </div>
+                <div class="bg-[#0a0e12] border border-[#1a2a32] rounded-lg p-3">
+                    <div class="text-[10px] text-slate-500 uppercase font-bold mb-1">Latence</div>
+                    <div id="stat-ping" class="font-orbitron font-bold text-white">-- ms</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: VIP LOCK -->
+        <div id="view-vip" class="view glass-panel vip-panel p-6">
+            <div class="flex justify-center mb-4">
+                <span class="border border-[#ea580c] text-[#ea580c] text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest bg-[#ea580c]/10">
+                    Test Gratuit Terminé
+                </span>
+            </div>
+            
+            <h2 class="font-orbitron text-2xl font-bold text-center text-white mb-4 uppercase leading-tight">
+                Débloquer L'Accès<br>Illimité
+            </h2>
+            
+            <p class="text-center text-slate-400 text-sm mb-8 leading-relaxed">
+                Le signal gratuit est validé ! Pour activer le Bot en continu et recevoir tous les signaux 24/7 :
+            </p>
+
+            <div class="flex flex-col gap-4">
+                <!-- Step 1 -->
+                <a href="https://reffpa.com/L?tag=d_5883107m_45077c_&site=5883107&ad=45077&r=registration" target="_blank" class="btn-orange rounded-xl p-4 flex items-center justify-between text-left hover:brightness-110 transition-all cursor-pointer block no-underline">
+                    <div>
+                        <div class="text-xs font-bold text-orange-200 mb-1">ÉTAPE 1 (OBLIGATOIRE)</div>
+                        <div class="font-orbitron font-bold text-lg leading-none mb-1">RECHARGER VOTRE COMPTE</div>
+                        <div class="text-[11px] text-white/80">Déposez min. 1300 XOF sur le jeu pour activer</div>
+                    </div>
+                    <svg class="w-6 h-6 shrink-0 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+
+                <!-- Step 2 -->
+                <a href="https://t.me/Kylian777bot" target="_blank" class="btn-blue-outline rounded-xl p-4 flex items-center justify-between text-left hover:bg-[rgba(0,229,255,0.1)] transition-all no-underline block">
+                    <div>
+                        <div class="text-xs font-bold text-[#00e5ff] mb-1">ÉTAPE 2 : ENVOYER LA PREUVE</div>
+                        <div class="text-[11px] text-slate-400">Envoyez la capture d'écran pour recevoir la clé VIP</div>
+                    </div>
+                    <svg class="w-6 h-6 text-[#00e5ff] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </a>
+            </div>
+
+            <div class="mt-6 flex items-center justify-center gap-2 text-slate-500 text-xs">
+                <span>🔒</span>
+                <span>Activation automatique en 2 minutes</span>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // State variables
+        let currentGame = '';
+        let freeUsesRemaining = 2; // Number of free predictions before VIP screen
+        let isPredicting = false;
+
+        // Elements
+        const views = {
+            selection: document.getElementById('view-selection'),
+            predictor: document.getElementById('view-predictor'),
+            vip: document.getElementById('view-vip')
+        };
+
+        // Navigation function
+        function showView(viewName) {
+            Object.values(views).forEach(v => {
+                if (v) v.classList.remove('active');
+            });
+            if (views[viewName]) {
+                views[viewName].classList.add('active');
+            }
+        }
+
+        function startGame(gameType) {
+            currentGame = gameType;
+            
+            // Setup predictor UI based on game
+            const pgIcon = document.getElementById('pg-icon');
+            const pgTitle = document.getElementById('pg-title');
+            
+            if(gameType === 'aviator') {
+                pgIcon.textContent = '✈️';
+                pgTitle.textContent = 'AVIATOR HACK v3.1';
+            }
+
+            resetPredictorUI();
+            showView('predictor');
+        }
+
+        function resetPredictorUI() {
+            document.getElementById('prediction-display').innerHTML = '--.--';
+            document.getElementById('prediction-display').className = 'prediction-value';
+            document.getElementById('prediction-label').textContent = "En attente d'injection";
+            document.getElementById('stat-confidence').textContent = "--%";
+            document.getElementById('stat-ping').textContent = "-- ms";
+        }
+
+        function runPrediction() {
+            if (isPredicting) return;
+            
+            if (freeUsesRemaining <= 0) {
+                showView('vip');
+                return;
+            }
+
+            isPredicting = true;
+            const btn = document.getElementById('btn-predict');
+            const btnText = document.getElementById('btn-predict-text');
+            const display = document.getElementById('prediction-display');
+            const label = document.getElementById('prediction-label');
+            const scanner = document.getElementById('scanner-line');
+            
+            // UI Loading state
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btnText.textContent = "Analyse...";
+            display.style.fontSize = "2rem";
+            display.className = 'font-orbitron font-bold text-slate-500 animate-pulse';
+            display.textContent = "DÉCRYPTAGE...";
+            label.textContent = "Extraction des données...";
+            
+            // Scanner animation
+            scanner.style.display = 'block';
+            let scanPos = 0;
+            let scanDir = 1;
+            const scanInterval = setInterval(() => {
+                scanPos += 5 * scanDir;
+                if(scanPos > 170) scanDir = -1;
+                if(scanPos < 0) scanDir = 1;
+                scanner.style.top = scanPos + 'px';
+            }, 30);
+
+            // Simulate processing time
+            setTimeout(() => {
+                clearInterval(scanInterval);
+                scanner.style.display = 'none';
+                
+                // Finalize based on game type
+                display.style.fontSize = ""; // reset to css default
+                display.className = 'prediction-value';
+                
+                if (currentGame === 'aviator') {
+                    // Set signal strictly to 2.20x as requested
+                    let multi = 2.20;
+                    display.textContent = multi.toFixed(2) + "x";
+                    label.textContent = "Multiplicateur Sécurisé";
+                    display.style.color = "#00ff88"; // Set green because it's > 2.0
+                } else if (currentGame === 'penalty') {
+                    // Penalty logic (Top Left, Top Right, Bottom Left, Bottom Right, Center)
+                    const zones = ["Haut Gauche", "Haut Droit", "Bas Gauche", "Bas Droit", "Centre"];
+                    const icons = ["↖️", "↗️", "↙️", "↘️", "⏺️"];
+                    const pick = Math.floor(Math.random() * zones.length);
+                    display.style.fontSize = "3rem";
+                    display.innerHTML = `<span class="block text-4xl mb-2">${icons[pick]}</span>${zones[pick]}`;
+                    label.textContent = "Zone Recommandée";
+                }
+
+                // Update Stats
+                document.getElementById('stat-confidence').textContent = Math.floor(Math.random() * (99 - 85) + 85) + "%";
+                document.getElementById('stat-ping').textContent = Math.floor(Math.random() * (120 - 15) + 15) + " ms";
+
+                // Reset button and decrement usage
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnText.textContent = "Générer à nouveau";
+                isPredicting = false;
+                freeUsesRemaining--;
+
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
